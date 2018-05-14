@@ -5,7 +5,6 @@
 
 
 function love.load()
-
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keyReleased = {}
@@ -48,7 +47,7 @@ function love.keypressed(key)
 end
 
 
-function love.mousepressed(x, y, key)
+function love.mousepressed(x, y, key)   
     love.mouse.keysPressed[key] = true    
 end
 
@@ -73,8 +72,6 @@ function love.update(dt)
 end
 
 function love.draw()
-
-    
     x, y = floorBody:getPosition()
     xb, yb = ballBody:getPosition()
     love.graphics.rectangle('line', x, y - 20, 2560,50)
