@@ -16,10 +16,14 @@ function love.load()
     fullscreen = true
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
-    world = love.physics.newWorld(1,1,true)
-    floorBody = love.physics.newBody(world, 0, 0, 'static')
-    floorShape = love.physics.newPolygonShape(0,1390,0,1440,2560,1440,2560,1390)
+    world = love.physics.newWorld(10,10,true)
+   
+    floorBody = love.physics.newBody(world, 0, 1390, 'static')
+    floorShape = love.physics.newRectangleShape(2560,1440)
     floorFixture = love.physics.newFixture(floorBody, floorShape, 1)
+    ballBody = love.physics.newBody(world, 2560/2, 1440/2,'dynamic')
+    ballShape = love.physics.newCircleShape(100)
+    ballFixture =love.physics.newFixture(ballBody,ballShape,1)
 end
 
 function love.update(dt)
@@ -65,8 +69,9 @@ end
 
 function love.draw()
 
-    love.graphics.rectangle('line',0,0,50,50)
+    
     x, y = floorBody:getPosition()
-    love.graphics.rectangle('line',x,y, 2560,50)
-    love.graphics.rectangle('line',2510,1390,50,50)
+    xb, yb = ballBody:getPosition()
+    love.graphics.rectangle('line', x, y, 2560,50)
+    love.graphics.circle('line',xb,yb,100)
 end
