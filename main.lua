@@ -1,5 +1,6 @@
 --[[
     Created by: Michael Blanchard 2018
+    xyz
 ]]
 
 
@@ -7,7 +8,9 @@
 function love.load()
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
-    love.mouse.keyReleased = {}
+    love.mouse.keysReleased = {}
+
+    balls = {}
 
     paused = false
     fullscreen = true
@@ -27,22 +30,22 @@ function love.load()
 end
 
 function love.update(dt)
-    if not paused then
-        love.mouse.keysPressed = {}  --clear keys pressed each update
-        love.mouse.keysPressed ={}
-        love.mouse.keysReleased = {}
+    world:update(dt)
+
+    if love.mouse.wasPressed('l') then
+        ballBody = love.physics.newBody(world, love.mouse.getX(), love.mouse.getY(),'dynamic')      
+        ballShape = love.physics.newCircleShape(100)
+        ballFixture =love.physics.newFixture(ballBody,ballShape,0.5)
+        ballFixture:setRestitution(0.9)
+        table.insert(balls, ballFixture)
     end
+
+    love.keyboard.keysPressed = {}  
+    love.mouse.keysPressed ={}
+    love.mouse.keysReleased = {}
 end
 
 function love.keypressed(key)
-    if key == 'p' then               --PAUSE
-        paused = not paused
-    end
-
-    if key == 'escape' then           --leave game
-        love.event.quit()
-    end
-    
     love.keyboard.keysPressed[key] = true
 end
 
@@ -67,13 +70,16 @@ function love.mouse.wasReleased(key)
     return love.mouse.keysReleased[key]
 end
 
-function love.update(dt)
-    world:update(dt)
-end
+
 
 function love.draw()
-    x, y = floorBody:getPosition()
+    xa, ya = floorBody:getPosition()
     xb, yb = ballBody:getPosition()
-    love.graphics.rectangle('line', x, y - 20, 2560,50)
+    love.graphics.rectangle('line', xa, ya - 20, 2560,50)
     love.graphics.circle('line',xb,yb,100)
+
+    for k, fixture in pairs(balls) do 
+        x, y = fixture:getBody():getPosition()
+        love.graphics.circle('line', x, y, 100)
+    end
 end
