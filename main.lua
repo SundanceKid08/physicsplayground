@@ -6,6 +6,7 @@
 
 
 function love.load()
+    math.randomseed(os.time())
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
@@ -35,7 +36,7 @@ end
 function love.update(dt)
     world:update(dt)
 
-    if love.mouse.wasPressed(1) then
+    if love.mouse.wasPressed(2) then                           --every right click generates a new ball
         count = count + 1
         ballBodyNew = love.physics.newBody(world, love.mouse.getX(), love.mouse.getY(),'dynamic')      
         ballShapeNew = love.physics.newCircleShape(50)
@@ -44,7 +45,18 @@ function love.update(dt)
         table.insert(balls, ballFixtureNew)
     end
 
-    love.keyboard.keysPressed = {}  
+    if love.mouse.isDown(1) then                               --if left mouse is down grab a ball and move it around with the mouse
+        for f, fixture in pairs(balls) do
+            if isBallGrabbed(fixture:getBody()) then
+                fixture:getBody():setX(love.mouse.getX())
+                fixture:getBody():setY(love.mouse.getY())
+            end
+        end
+    end
+
+
+
+    love.keyboard.keysPressed = {}   --clear all the keypresses after update has run
     love.mouse.keysPressed ={}
     love.mouse.keysReleased = {}
 end
@@ -52,7 +64,7 @@ end
 function love.keypressed(key)
     love.keyboard.keysPressed[key] = true
 
-    if key == 'escape' then
+    if key == 'escape' then                       --where escape from game and pause can happen
         love.event.quit()
     end
 end
@@ -81,12 +93,28 @@ end
 
 
 function love.draw()
-
+    
     for k, fixture in pairs(balls) do 
+        love.graphics.setColor(math.random(1,255),math.random(1,255),math.random(1,255), 255)
         x, y = fixture:getBody():getPosition()
         love.graphics.circle('line', x, y, 50)
     end
-    
+    love.graphics.setColor(math.random(255),math.random(255),math.random(255),255)
     text = love.graphics.newText(love.graphics.getFont(),tostring(count))
     love.graphics.draw(text, 50, 50)
+end
+
+function isBallGrabbed(circle)   --detects if mouse position is within a circle object
+    x = circle:getX()
+    y = circle:getY()
+
+    mouseX = love.mouse.getX()
+    mouseY = love.mouse.getY()
+
+    if x - 50 < mouseX and x + 50 > mouseX                -- +/-50 to account for the radius of the circle
+            and y - 50 < mouseY and y + 50 > mouseX then
+        return true
+    end
+
+    return false
 end
