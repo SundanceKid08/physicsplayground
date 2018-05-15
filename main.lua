@@ -2,38 +2,35 @@
     Created by: Michael Blanchard 2018
     xyz
 ]]
+
 Class = require 'src/class'
+
 require 'src/Ball'
+require 'src/constants'
 
 
 function love.load()
     math.randomseed(os.time())
+
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
 
-    GLOBAL_RESTITUTION = 0.9
-
     balls = {}
-    fixtures = {}
-    shapes = {}
-    count = 0
+
     paused = false
     fullscreen = true
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
 
-    world = love.physics.newWorld(0,0,true)  --world contains all relevant bodies/fixtures in physics simulation
+    world = love.physics.newWorld(0,GRAVITY,true)  --world contains all relevant bodies/fixtures in physics simulation
 
-    ball1 = Ball(2560/3, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
-    ball2 = Ball(2560/2, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
-    joint = love.physics.newDistanceJoint(ball1:getBody(), ball2:getBody(), ball1:getX(), ball1:getY(), ball2:getX(), ball2:getY(), true)
+    ball = Ball(2560/2 + 5, 1440/2 + 5, 50, 'dynamic',GLOBAL_RESTITUTION,world)
+    ball:getBody():setMass(10)
+   
+    table.insert(balls, ball)
+  
 
-    table.insert(balls, ball1)
-    table.insert(balls, ball2)
-
-    
-    
     floorBody = love.physics.newBody(world, 0, 1440, 'static')          --this will be our floor bound
     floorShape = love.physics.newEdgeShape(0,0,2560,0)
     floorFixture = love.physics.newFixture(floorBody, floorShape)
@@ -46,25 +43,18 @@ function love.load()
 end
 
 function love.update(dt)
+ 
     world:update(dt)
 
     if love.mouse.wasPressed(2) then                           --every right click generates a new ball
-        count = count + 1
-        ballBodyNew = love.physics.newBody(world, love.mouse.getX(), love.mouse.getY(),'dynamic')      
-        ballShapeNew = love.physics.newCircleShape(50)
-        ballFixtureNew =love.physics.newFixture(ballBodyNew,ballShapeNew)
-        ballFixtureNew:setRestitution(1)
-        table.insert(balls, ballFixtureNew)
+        table.insert(balls, Ball(love.mouse.getX(),love.mouse.getY(),50,'dynamic',GLOBAL_RESTITUTION,world))
     end
 
-    if love.mouse.isDown(1) then                               --if left mouse is down grab a ball and move it around with the mouse
-        for f, fixture in pairs(balls) do
-            if isBallGrabbed(fixture:getBody()) then
-                fixture:getBody():setX(love.mouse.getX())
-                fixture:getBody():setY(love.mouse.getY())
-            end
-        end
+    if love.mouse.wasPressed(1) then                          
+        ball:getBody():applyLinearImpulse(1000,0,ball:getX(),ball:getY())
     end
+
+
 
 
 
@@ -104,16 +94,12 @@ end
 
 
 
-function love.draw()
-    
+function love.draw()  
     for k, fixture in pairs(balls) do 
         love.graphics.setColor(math.random(1,255),math.random(1,255),math.random(1,255), 255)
         x, y = fixture:getBody():getPosition()
         love.graphics.circle('line', x, y, 50)
     end
-    love.graphics.setColor(math.random(255),math.random(255),math.random(255),255)
-    text = love.graphics.newText(love.graphics.getFont(),tostring(count))
-    love.graphics.draw(text, 50, 50)
 end
 
 function isBallGrabbed(circle)   --detects if mouse position is within a circle object
@@ -123,8 +109,8 @@ function isBallGrabbed(circle)   --detects if mouse position is within a circle 
     mouseX = love.mouse.getX()
     mouseY = love.mouse.getY()
 
-    if x - 50 < mouseX and x + 50 > mouseX                -- +/-50 to account for the radius of the circle
-            and y - 50 < mouseY and y + 50 > mouseX then
+    if x - 100 < mouseX and x + 100 > mouseX                -- +/-50 to account for the radius of the circle
+            and y - 100 < mouseY and y + 100 > mouseX then
         return true
     end
 
