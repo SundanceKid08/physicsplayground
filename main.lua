@@ -11,20 +11,28 @@ function love.load()
     love.mouse.keysReleased = {}
 
     balls = {}
-
+    fixtures = {}
+    shapes = {}
+    count = 0
     paused = false
     fullscreen = true
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
 
-    world = love.physics.newWorld(0,100,true)  --world contains all relevant bodies/fixtures in physics simulation
+    world = love.physics.newWorld(0,500,true)  --world contains all relevant bodies/fixtures in physics simulation
    
     floorBody = love.physics.newBody(world, 0, 1440, 'static')          --this will be our floor bound
-    floorShape = love.physics.newRectangleShape(2560,50)
+    floorShape = love.physics.newEdgeShape(0,0,2560,0)
     floorFixture = love.physics.newFixture(floorBody, floorShape)
 
+    leftWallBody = love.physics.newBody(world,0,0,'static')
+    rightWallBody = love.physics.newBody(world,2560,0,'static')
+    wallShape = love.physics.newEdgeShape(0,0,0,1440)
+    leftWallFixture = love.physics.newFixture(leftWallBody,wallShape)
+    rightWallFixture = love.physics.newFixture(rightWallBody,wallShape)
+
     ballBody = love.physics.newBody(world, 2560/2, 1440/2,'dynamic')      
-    ballShape = love.physics.newCircleShape(100)
+    ballShape = love.physics.newCircleShape(50)
     ballFixture =love.physics.newFixture(ballBody,ballShape,0.5)
     ballFixture:setRestitution(0.9)                                --give ball some bounce
 end
@@ -32,12 +40,13 @@ end
 function love.update(dt)
     world:update(dt)
 
-    if love.mouse.wasPressed('l') then
-        ballBody = love.physics.newBody(world, love.mouse.getX(), love.mouse.getY(),'dynamic')      
-        ballShape = love.physics.newCircleShape(100)
-        ballFixture =love.physics.newFixture(ballBody,ballShape,0.5)
-        ballFixture:setRestitution(0.9)
-        table.insert(balls, ballFixture)
+    if love.mouse.wasPressed(1) then
+        count = count + 1
+        ballBodyNew = love.physics.newBody(world, love.mouse.getX(), love.mouse.getY(),'dynamic')      
+        ballShapeNew = love.physics.newCircleShape(50)
+        ballFixtureNew =love.physics.newFixture(ballBodyNew,ballShapeNew)
+        ballFixtureNew:setRestitution(0.9)
+        table.insert(balls, ballFixtureNew)
     end
 
     love.keyboard.keysPressed = {}  
@@ -79,11 +88,14 @@ end
 function love.draw()
     xa, ya = floorBody:getPosition()
     xb, yb = ballBody:getPosition()
-    love.graphics.rectangle('line', xa, ya - 20, 2560,50)
-    love.graphics.circle('line',xb,yb,100)
+    love.graphics.rectangle('line', xa, ya, 2560,50)
+    love.graphics.circle('line',xb,yb,50)
 
     for k, fixture in pairs(balls) do 
         x, y = fixture:getBody():getPosition()
-        love.graphics.circle('line', x, y, 100)
+        love.graphics.circle('line', x, y, 50)
     end
+
+    text = love.graphics.newText(love.graphics.getFont(),tostring(count))
+    love.graphics.draw(text, 50, 50)
 end
