@@ -20,7 +20,7 @@ function love.load()
     love.window.setFullscreen(true, "desktop")
 
     world = love.physics.newWorld(0,500,true)  --world contains all relevant bodies/fixtures in physics simulation
-   
+    
     floorBody = love.physics.newBody(world, 0, 1440, 'static')          --this will be our floor bound
     floorShape = love.physics.newEdgeShape(0,0,2560,0)
     floorFixture = love.physics.newFixture(floorBody, floorShape)
@@ -28,13 +28,8 @@ function love.load()
     leftWallBody = love.physics.newBody(world,0,0,'static')
     rightWallBody = love.physics.newBody(world,2560,0,'static')
     wallShape = love.physics.newEdgeShape(0,0,0,1440)
-    leftWallFixture = love.physics.newFixture(leftWallBody,wallShape)
-    rightWallFixture = love.physics.newFixture(rightWallBody,wallShape)
-
-    ballBody = love.physics.newBody(world, 2560/2, 1440/2,'dynamic')      
-    ballShape = love.physics.newCircleShape(50)
-    ballFixture =love.physics.newFixture(ballBody,ballShape,0.5)
-    ballFixture:setRestitution(0.9)                                --give ball some bounce
+    leftWallFixture = love.physics.newFixture(leftWallBody, wallShape)
+    rightWallFixture = love.physics.newFixture(rightWallBody, wallShape)
 end
 
 function love.update(dt)
@@ -86,16 +81,12 @@ end
 
 
 function love.draw()
-    xa, ya = floorBody:getPosition()
-    xb, yb = ballBody:getPosition()
-    love.graphics.rectangle('line', xa, ya, 2560,50)
-    love.graphics.circle('line',xb,yb,50)
 
     for k, fixture in pairs(balls) do 
         x, y = fixture:getBody():getPosition()
         love.graphics.circle('line', x, y, 50)
     end
-
+    
     text = love.graphics.newText(love.graphics.getFont(),tostring(count))
     love.graphics.draw(text, 50, 50)
 end
