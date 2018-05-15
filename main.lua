@@ -6,6 +6,7 @@
 Class = require 'src/class'
 
 require 'src/Ball'
+require 'src/Leg'
 require 'src/constants'
 
 
@@ -17,9 +18,11 @@ function love.load()
     love.mouse.keysReleased = {}
 
     balls = {}
+    legs = {}
 
     paused = false
     fullscreen = true
+
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
 
@@ -43,21 +46,14 @@ function love.load()
 end
 
 function love.update(dt)
- 
     world:update(dt)
-
     if love.mouse.wasPressed(2) then                           --every right click generates a new ball
-        table.insert(balls, Ball(love.mouse.getX(),love.mouse.getY(),50,'dynamic',GLOBAL_RESTITUTION,world))
+        table.insert(legs, Leg(love.mouse.getX(),love.mouse.getY(),200, 50,'dynamic',GLOBAL_RESTITUTION,world))
     end
 
     if love.mouse.wasPressed(1) then                          
         ball:getBody():applyLinearImpulse(1000,0,ball:getX(),ball:getY())
     end
-
-
-
-
-
     love.keyboard.keysPressed = {}   --clear all the keypresses after update has run
     love.mouse.keysPressed ={}
     love.mouse.keysReleased = {}
@@ -99,6 +95,12 @@ function love.draw()
         love.graphics.setColor(math.random(1,255),math.random(1,255),math.random(1,255), 255)
         x, y = fixture:getBody():getPosition()
         love.graphics.circle('line', x, y, 50)
+    end
+
+    for k, fixture in pairs(legs) do 
+        love.graphics.setColor(math.random(1,255),math.random(1,255),math.random(1,255), 255)
+        x, y = fixture:getBody():getPosition()
+        love.graphics.rectangle('line', x, y, 200,50)
     end
 end
 
