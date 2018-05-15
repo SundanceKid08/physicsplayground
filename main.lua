@@ -2,7 +2,8 @@
     Created by: Michael Blanchard 2018
     xyz
 ]]
-
+Class = require 'src/class'
+require 'src/Ball'
 
 
 function love.load()
@@ -10,6 +11,8 @@ function love.load()
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
+
+    GLOBAL_RESTITUTION = 0.9
 
     balls = {}
     fixtures = {}
@@ -20,7 +23,16 @@ function love.load()
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
 
-    world = love.physics.newWorld(0,500,true)  --world contains all relevant bodies/fixtures in physics simulation
+    world = love.physics.newWorld(0,0,true)  --world contains all relevant bodies/fixtures in physics simulation
+
+    ball1 = Ball(2560/3, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
+    ball2 = Ball(2560/2, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
+    joint = love.physics.newDistanceJoint(ball1:getBody(), ball2:getBody(), ball1:getX(), ball1:getY(), ball2:getX(), ball2:getY(), true)
+
+    table.insert(balls, ball1)
+    table.insert(balls, ball2)
+
+    
     
     floorBody = love.physics.newBody(world, 0, 1440, 'static')          --this will be our floor bound
     floorShape = love.physics.newEdgeShape(0,0,2560,0)
@@ -41,7 +53,7 @@ function love.update(dt)
         ballBodyNew = love.physics.newBody(world, love.mouse.getX(), love.mouse.getY(),'dynamic')      
         ballShapeNew = love.physics.newCircleShape(50)
         ballFixtureNew =love.physics.newFixture(ballBodyNew,ballShapeNew)
-        ballFixtureNew:setRestitution(0.9)
+        ballFixtureNew:setRestitution(1)
         table.insert(balls, ballFixtureNew)
     end
 
