@@ -12,7 +12,7 @@ require 'src/constants'
 
 function love.load()
     math.randomseed(os.time())
-
+    debug = false                                                   --change flag for debug rendering of Polygons
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
@@ -20,19 +20,28 @@ function love.load()
     balls = {}     
     legs = {}
 
-    paused = false                            --Game Pause  *not currently implemented in update
-    fullscreen = true                          --fullscreen mode
+    paused = false                                                  --Game Pause  *not currently implemented in update
+    fullscreen = true                                               --fullscreen mode
 
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
 
-    world = love.physics.newWorld(0,GRAVITY,true)  --world contains all relevant bodies/fixtures in physics simulation
+    world = love.physics.newWorld(0,GRAVITY,true)                   --world contains all relevant bodies/fixtures in physics simulation
 
-    ball = Ball(2560/2 + 5, 1440/2 + 5, 50, 'dynamic',GLOBAL_RESTITUTION,world)
-    ball:getBody():setMass(10)
+    ball = Ball(2560/2 - 200, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
+    ball2 = Ball(2560/2 - 500, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
+    center = Ball(2560/2, 1440/2, 50, 'static',GLOBAL_RESTITUTION,world)
+    joint = love.physics.newRevoluteJoint(ball:getBody(),center:getBody(),center:getX(),center:getY(), true)
+    joint2 = love.physics.newRevoluteJoint(ball2:getBody(),center:getBody(),center:getX(),center:getY(), true)
+    ball:getBody():applyLinearImpulse(0,10000)
+    ball2:getBody():applyLinearImpulse(0,15000)
+
+     ball3 = Ball(2560/2 - 700, 1440/2, 50, 'static',GLOBAL_RESTITUTION,world)
+   
    
     table.insert(balls, ball)
-  
+    table.insert(balls,ball2)
+    table.insert(balls,center)
 
     floorBody = love.physics.newBody(world, 0, 1440, 'static')          --this will be our floor bound
     floorShape = love.physics.newEdgeShape(0,0,2560,0)
@@ -47,14 +56,22 @@ end
 
 function love.update(dt)
     world:update(dt)
-    if love.mouse.wasPressed(2) then                           --every right click generates a new ball
-        table.insert(legs, Leg(love.mouse.getX(),love.mouse.getY(),200, 50,'dynamic',GLOBAL_RESTITUTION,world))
+    if love.mouse.wasPressed(2) then                                    --every right click generates a new leg
+        leg = Leg(love.mouse.getX(),love.mouse.getY(),200, 50,'dynamic',GLOBAL_RESTITUTION,world)
+        leg:getBody():setAngle(45 * DEGREES_TO_RADIANS)
+        leg:getBody():setSleepingAllowed(true)                         --use of sleep is preferred as it reduces load when objects come to rest
+        table.insert(legs, leg)
     end
 
     if love.mouse.wasPressed(1) then                          
         ball:getBody():applyLinearImpulse(1000,0,ball:getX(),ball:getY())
     end
-    love.keyboard.keysPressed = {}   --clear all the keypresses after update has run
+
+    if debug then
+        debug()
+    end
+
+    love.keyboard.keysPressed = {}                                  --clear all the keypresses after update has run
     love.mouse.keysPressed ={}
     love.mouse.keysReleased = {}
 end
@@ -62,11 +79,10 @@ end
 function love.keypressed(key)
     love.keyboard.keysPressed[key] = true
 
-    if key == 'escape' then                       --where escape from game and pause can happen
+    if key == 'escape' then                                         --where escape from game and pause can happen
         love.event.quit()
     end
 end
-
 
 function love.mousepressed(x, y, key)   
     love.mouse.keysPressed[key] = true    
@@ -95,28 +111,51 @@ function love.draw()
     end
 
     for k, fixture in pairs(legs) do 
-        x, y = fixture:getBody():getLocalCenter()  --get center postion of body
-        xo, yo = fixture:getBody():getPosition()   --get position of body (in this case top left corner  *I THINK*)
-        angle = fixture:getBody():getAngle()       --get angle of rotation of body
-        love.graphics.push()                       --push draw setup to stack
-        love.graphics.translate(x + xo, y + yo)    -- add the center position to the x,y position and translate
-        love.graphics.rotate(angle)                 --rotate the draw function
-        love.graphics.rectangle('line', x - 100, y - 25, 200,50)   --draw rectangle accounting for offset from center
-        love.graphics.pop()                                       --return draw to original state
+        x, y = fixture:getBody():getLocalCenter()                   --get center postion of body
+        xo, yo = fixture:getBody():getPosition()                    --get position of body (in this case top left corner  *I THINK*)
+        angle = fixture:getBody():getAngle()                        --get angle of rotation of body
+        love.graphics.push()                                        --push draw setup to stack
+        love.graphics.translate(x + xo, y + yo)                     -- add the center position to the x,y position and translate
+        love.graphics.rotate(angle)                                 --rotate the draw function
+        love.graphics.rectangle('line', x - 100, y - 25, 200,50)    --draw rectangle accounting for offset from center
+        love.graphics.pop()                                         --return draw to original state
     end
 end
 
-function isBallGrabbed(circle)   --detects if mouse position is within a circle object
+function isBallGrabbed(circle)                                      --detects if mouse position is within a circle object
     x = circle:getX()
     y = circle:getY()
 
     mouseX = love.mouse.getX()
     mouseY = love.mouse.getY()
 
-    if x - 100 < mouseX and x + 100 > mouseX                -- +/-50 to account for the radius of the circle
+    if x - 100 < mouseX and x + 100 > mouseX                        -- +/-50 to account for the radius of the circle
             and y - 100 < mouseY and y + 100 > mouseX then
         return true
     end
 
     return false
+end
+
+function debug()
+    for _, body in pairs(world:getBodies()) do
+        for _, fixture in pairs(body:getFixtures()) do
+            local shape = fixture:getShape()
+       
+            if shape:typeOf("CircleShape") then
+              love.graphics.setColor(1,0,1,1)
+              local cx, cy = body:getWorldPoints(shape:getPoint())
+              love.graphics.circle('line', cx, cy, 50)
+              --love.graphics.circle('line', 10, 10, 50)
+                --local cx, cy = body:getWorldPoints(shape:getPoint())
+                --love.graphics.circle("fill", cx, cy, shape:getRadius())
+            elseif shape:typeOf("PolygonShape") then
+                love.graphics.setColor(1,0,1,1)
+                love.graphics.polygon("fill", body:getWorldPoints(shape:getPoints()))
+            else
+                love.graphics.setColor(1,0,1,1)
+                love.graphics.line(body:getWorldPoints(shape:getPoints()))
+            end
+        end
+    end
 end
