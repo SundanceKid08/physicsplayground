@@ -17,11 +17,11 @@ function love.load()
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
 
-    balls = {}
+    balls = {}     
     legs = {}
 
-    paused = false
-    fullscreen = true
+    paused = false                            --Game Pause  *not currently implemented in update
+    fullscreen = true                          --fullscreen mode
 
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
@@ -88,19 +88,21 @@ function love.mouse.wasReleased(key)
     return love.mouse.keysReleased[key]
 end
 
-
-
 function love.draw()  
     for k, fixture in pairs(balls) do 
-        love.graphics.setColor(math.random(1,255),math.random(1,255),math.random(1,255), 255)
         x, y = fixture:getBody():getPosition()
         love.graphics.circle('line', x, y, 50)
     end
 
     for k, fixture in pairs(legs) do 
-        love.graphics.setColor(math.random(1,255),math.random(1,255),math.random(1,255), 255)
-        x, y = fixture:getBody():getPosition()
-        love.graphics.rectangle('line', x, y, 200,50)
+        x, y = fixture:getBody():getLocalCenter()  --get center postion of body
+        xo, yo = fixture:getBody():getPosition()   --get position of body (in this case top left corner  *I THINK*)
+        angle = fixture:getBody():getAngle()       --get angle of rotation of body
+        love.graphics.push()                       --push draw setup to stack
+        love.graphics.translate(x + xo, y + yo)    -- add the center position to the x,y position and translate
+        love.graphics.rotate(angle)                 --rotate the draw function
+        love.graphics.rectangle('line', x - 100, y - 25, 200,50)   --draw rectangle accounting for offset from center
+        love.graphics.pop()                                       --return draw to original state
     end
 end
 
