@@ -1,5 +1,5 @@
 --[[
-    Created by: Michael Blanchard 2018
+    Created by: Michael Blanchard and Lee Gushurst 2018
     xyz
 ]]
 
@@ -12,7 +12,7 @@ require 'src/constants'
 
 function love.load()
     math.randomseed(os.time())
-    debug = false                                                   --change flag for debug rendering of Polygons
+    debug = false                                                 --change flag for debug rendering of Polygons
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
@@ -28,35 +28,27 @@ function love.load()
 
     world = love.physics.newWorld(0,GRAVITY,true)                   --world contains all relevant bodies/fixtures in physics simulation
 
-    ball = Ball(2560/2 - 200, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
-    ball2 = Ball(2560/2 - 500, 1440/2, 50, 'dynamic',GLOBAL_RESTITUTION,world)
-    center = Ball(2560/2, 1440/2, 50, 'static',GLOBAL_RESTITUTION,world)
-    joint = love.physics.newRevoluteJoint(ball:getBody(),center:getBody(),center:getX(),center:getY(), true)
-    joint2 = love.physics.newRevoluteJoint(ball2:getBody(),center:getBody(),center:getX(),center:getY(), true)
-    ball:getBody():applyLinearImpulse(0,10000)
-    ball2:getBody():applyLinearImpulse(0,15000)
 
-     ball3 = Ball(2560/2 - 700, 1440/2, 50, 'static',GLOBAL_RESTITUTION,world)
-   
-   
-    table.insert(balls, ball)
-    table.insert(balls,ball2)
-    table.insert(balls,center)
+    thigh = Leg(WINDOW_WIDTH/2,WINDOW_HEIGHT/2,200,50,'dynamic',0,world)
+    thigh:getBody():setAngle(45 * DEGREES_TO_RADIANS)
+    xt, yt = thigh:getBody():getWorldCenter()
+    calf = Leg(xt + 75,yt + 150,200,50,'dynamic',0,world)
+    calf:getBody():setAngle(90 * DEGREES_TO_RADIANS)
+    knee = love.physics.newRevoluteJoint(thigh:getBody(),calf:getBody(),xt + 150,yt,false)
+    knee:setLimits(1 * DEGREES_TO_RADIANS, 90 * DEGREES_TO_RADIANS)
+    
+    
 
-    floorBody = love.physics.newBody(world, 0, 1440, 'static')          --this will be our floor bound
-    floorShape = love.physics.newEdgeShape(0,0,2560,0)
-    floorFixture = love.physics.newFixture(floorBody, floorShape)
+    table.insert(legs, thigh)
+    table.insert(legs, calf)
+    
 
-    leftWallBody = love.physics.newBody(world,0,0,'static')
-    rightWallBody = love.physics.newBody(world,2560,0,'static')
-    wallShape = love.physics.newEdgeShape(0,0,0,1440)
-    leftWallFixture = love.physics.newFixture(leftWallBody, wallShape)
-    rightWallFixture = love.physics.newFixture(rightWallBody, wallShape)
 end
 
 function love.update(dt)
     world:update(dt)
-    if love.mouse.wasPressed(2) then                                    --every right click generates a new leg
+    
+    if love.mouse.wasPressed(2) then                                   --every right click generates a new leg
         leg = Leg(love.mouse.getX(),love.mouse.getY(),200, 50,'dynamic',GLOBAL_RESTITUTION,world)
         leg:getBody():setAngle(45 * DEGREES_TO_RADIANS)
         leg:getBody():setSleepingAllowed(true)                         --use of sleep is preferred as it reduces load when objects come to rest
@@ -64,7 +56,7 @@ function love.update(dt)
     end
 
     if love.mouse.wasPressed(1) then                          
-        ball:getBody():applyLinearImpulse(1000,0,ball:getX(),ball:getY())
+       calf:getBody():applyLinearImpulse(1000,0)
     end
 
     if debug then
