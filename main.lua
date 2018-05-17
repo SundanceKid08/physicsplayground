@@ -29,7 +29,7 @@ function love.load()
     world = love.physics.newWorld(0,GRAVITY,true)                   --world contains all relevant bodies/fixtures in physics simulation
 
 
-    thigh = Leg(WINDOW_WIDTH/2,WINDOW_HEIGHT/2,200,50,'dynamic',0,world)
+    thigh = Leg(WINDOW_WIDTH/2,WINDOW_HEIGHT/2,200,50,'static',0,world)
     thigh:getBody():setAngle(45 * DEGREES_TO_RADIANS)
     xt, yt = thigh:getBody():getWorldCenter()
     calf = Leg(xt + 75,yt + 150,200,50,'dynamic',0,world)
