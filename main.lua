@@ -12,13 +12,14 @@ require 'src/constants'
 
 function love.load()
     math.randomseed(os.time())
-    debug = false                                                 --change flag for debug rendering of Polygons
+    debug = true                                                --change flag for debug rendering of Polygons
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
-
+    timer = 0
     balls = {}     
     legs = {}
+    joints = {}
 
     paused = false                                                  --Game Pause  *not currently implemented in update
     fullscreen = true                                               --fullscreen mode
@@ -28,37 +29,55 @@ function love.load()
 
     world = love.physics.newWorld(0,GRAVITY,true)                   --world contains all relevant bodies/fixtures in physics simulation
 
+    torso = Leg(0, WINDOW_HEIGHT/2, 200, 500,'static',0,world)
+
 
     thigh = Leg(WINDOW_WIDTH/2,WINDOW_HEIGHT/2,200,50,'static',0,world)
-    thigh:getBody():setAngle(1 * DEGREES_TO_RADIANS)
+    thigh:getBody():setAngle(0 * DEGREES_TO_RADIANS)
     xt, yt = thigh:getBody():getWorldCenter()
     calf = Leg(xt + 60,yt + 100,200,50,'dynamic',0,world)
-    calf:getBody():setAngle(45 * DEGREES_TO_RADIANS)
+    calf:getBody():setAngle(90 * DEGREES_TO_RADIANS)
     knee = love.physics.newRevoluteJoint(thigh:getBody(),calf:getBody(),xt + 75,yt,false)
     knee:setLimitsEnabled(true)
-    knee:setLimits(300* DEGREES_TO_RADIANS, 345* DEGREES_TO_RADIANS)    
+    knee:setLimits(285* DEGREES_TO_RADIANS, 360* DEGREES_TO_RADIANS)    
+    xc, yc = calf:getBody():getWorldCenter()
+    --foot = Leg(xc,yc, 30, 60, 'dynamic', 0,  world)
+    --ankle = love.physics.newWeldJoint(calf:getBody(), foot:getBody(), xc + 100, yc, false)
+    --foot:getBody():setAngle(90 * DEGREES_TO_RADIANS)
     
-
+    table.insert(legs, torso)
     table.insert(legs, thigh)
     table.insert(legs, calf)
-    
+    --table.insert(legs, foot)
+    table.insert(joints, knee)
+    table.insert(joints, ankle)
 
 end
 
 function love.update(dt)
     world:update(dt)
     
-    if love.mouse.wasPressed(2) then                                   --every right click generates a new leg
+    
+    
+    if love.mouse.isDown(2) then                                   --every right click generates a new leg
         calf:getBody():applyLinearImpulse(-1000, 500)
     end
 
-    if love.mouse.wasPressed(1) then                          
+    if love.mouse.isDown(1) then                          
        calf:getBody():applyLinearImpulse(1000,0)
     end
 
     if debug then
-        debug()
+        buggy()
     end
+
+    if timer > 7 then
+        newBall = Ball(calf:getX(), calf:getY() - 300, 50, 'dynamic', GLOBAL_RESTITUTION, world)
+        table.insert(balls, newBall)
+        timer = 0
+    end
+
+    timer = timer + dt
 
     love.keyboard.keysPressed = {}                                  --clear all the keypresses after update has run
     love.mouse.keysPressed ={}
@@ -106,7 +125,7 @@ function love.draw()
         love.graphics.push()                                        --push draw setup to stack
         love.graphics.translate(x + xo, y + yo)                     -- add the center position to the x,y position and translate
         love.graphics.rotate(angle)                                 --rotate the draw function
-        love.graphics.rectangle('line', x - 100, y - 25, 200,50)    --draw rectangle accounting for offset from center
+        love.graphics.rectangle('line', x - 100, y - 25, fixture:getWidth(),fixture:getHeight())    --draw rectangle accounting for offset from center
         love.graphics.pop()                                         --return draw to original state
     end
 end
@@ -126,7 +145,7 @@ function isBallGrabbed(circle)                                      --detects if
     return false
 end
 
-function debug()
+function buggy()
     for _, body in pairs(world:getBodies()) do
         for _, fixture in pairs(body:getFixtures()) do
             local shape = fixture:getShape()
