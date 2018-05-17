@@ -29,14 +29,14 @@ function love.load()
     world = love.physics.newWorld(0,GRAVITY,true)                   --world contains all relevant bodies/fixtures in physics simulation
 
 
-    thigh = Leg(WINDOW_WIDTH/2,WINDOW_HEIGHT/2,200,50,'dynamic',0,world)
-    thigh:getBody():setAngle(45 * DEGREES_TO_RADIANS)
+    thigh = Leg(WINDOW_WIDTH/2,WINDOW_HEIGHT/2,200,50,'static',0,world)
+    thigh:getBody():setAngle(1* DEGREES_TO_RADIANS)
     xt, yt = thigh:getBody():getWorldCenter()
-    calf = Leg(xt + 75,yt + 150,200,50,'dynamic',0,world)
-    calf:getBody():setAngle(90 * DEGREES_TO_RADIANS)
-    knee = love.physics.newRevoluteJoint(thigh:getBody(),calf:getBody(),xt + 150,yt,false)
-    knee:setLimits(1 * DEGREES_TO_RADIANS, 90 * DEGREES_TO_RADIANS)
-    
+    calf = Leg(xt + 60,yt + 100,200,50,'dynamic',0,world)
+    calf:getBody():setAngle(45 * DEGREES_TO_RADIANS)
+    knee = love.physics.newRevoluteJoint(thigh:getBody(),calf:getBody(),xt + 75,yt,false)
+    knee:setLimitsEnabled(true)
+    knee:setLimits(300* DEGREES_TO_RADIANS, 345* DEGREES_TO_RADIANS)    
     
 
     table.insert(legs, thigh)
@@ -49,10 +49,7 @@ function love.update(dt)
     world:update(dt)
     
     if love.mouse.wasPressed(2) then                                   --every right click generates a new leg
-        leg = Leg(love.mouse.getX(),love.mouse.getY(),200, 50,'dynamic',GLOBAL_RESTITUTION,world)
-        leg:getBody():setAngle(45 * DEGREES_TO_RADIANS)
-        leg:getBody():setSleepingAllowed(true)                         --use of sleep is preferred as it reduces load when objects come to rest
-        table.insert(legs, leg)
+        calf:getBody():applyLinearImpulse(-1000, 500)
     end
 
     if love.mouse.wasPressed(1) then                          
