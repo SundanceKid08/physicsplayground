@@ -7,5 +7,5 @@
 
  DEGREES_TO_RADIANS = math.pi/180      --multiply with degrees to get radians
 
- WINDOW_WIDTH  = love.graphics.getPixelWidth()
- WINDOW_HEIGHT = love.graphics.getPixelHeight()
+ WINDOW_WIDTH  = love.graphics.getWidth()
+ WINDOW_HEIGHT = love.graphics.getHeight()

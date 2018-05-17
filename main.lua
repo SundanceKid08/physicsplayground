@@ -12,6 +12,7 @@ require 'src/constants'
 
 function love.load()
     math.randomseed(os.time())
+    love.window.setMode(2560,1440)
     debug = true                                                --change flag for debug rendering of Polygons
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
@@ -20,14 +21,18 @@ function love.load()
     balls = {}     
     legs = {}
     joints = {}
-
+    score = 0
     paused = false                                                  --Game Pause  *not currently implemented in update
     fullscreen = true                                               --fullscreen mode
 
     love.window.setTitle('Physics Playscape')
     love.window.setFullscreen(true, "desktop")
 
-    world = love.physics.newWorld(0,GRAVITY,true)                   --world contains all relevant bodies/fixtures in physics simulation
+    world = love.physics.newWorld(0,GRAVITY,true)   --world contains all relevant bodies/fixtures in physics simulation
+
+    goal = Leg(WINDOW_WIDTH * 2, WINDOW_HEIGHT/2, 200, 500,'static',0,world)
+    
+    
 
     torso = Leg(0, WINDOW_HEIGHT/2, 200, 500,'static',0,world)
 
@@ -44,7 +49,7 @@ function love.load()
     --foot = Leg(xc,yc, 30, 60, 'dynamic', 0,  world)
     --ankle = love.physics.newWeldJoint(calf:getBody(), foot:getBody(), xc + 100, yc, false)
     --foot:getBody():setAngle(90 * DEGREES_TO_RADIANS)
-    
+    table.insert(legs, goal)
     table.insert(legs, torso)
     table.insert(legs, thigh)
     table.insert(legs, calf)
@@ -72,13 +77,22 @@ function love.update(dt)
     end
 
     if timer > 7 then
-        newBall = Ball(calf:getX(), calf:getY() - 300, 50, 'dynamic', GLOBAL_RESTITUTION, world)
+        newBall = Ball(thigh:getX() + 150, thigh:getY() - 300, 50, 'dynamic', GLOBAL_RESTITUTION, world)
+        newBall:getFixture():setFilterData(1,1,1)                       --set ball to category 1 fixture
         table.insert(balls, newBall)
+        goal:getFixture():setMask(1)                                 --set goal to not collide with cat 1 fixtures
         timer = 0
     end
 
     timer = timer + dt
 
+    for k, ball in pairs(balls) do
+        if goal:getFixture():testPoint(ball:getBody():getPosition()) and not ball:isScored() then
+            ball:setScored(true)
+            score = score + 1
+        end
+    end
+         
     love.keyboard.keysPressed = {}                                  --clear all the keypresses after update has run
     love.mouse.keysPressed ={}
     love.mouse.keysReleased = {}
@@ -128,6 +142,8 @@ function love.draw()
         love.graphics.rectangle('line', x - 100, y - 25, fixture:getWidth(),fixture:getHeight())    --draw rectangle accounting for offset from center
         love.graphics.pop()                                         --return draw to original state
     end
+    text = love.graphics.newText(love.graphics.getFont(), 'score = ' .. tostring(score))
+    love.graphics.draw(text,100,100)
 end
 
 function isBallGrabbed(circle)                                      --detects if mouse position is within a circle object
