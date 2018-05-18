@@ -12,11 +12,14 @@ require 'src/constants'
 
 function love.load()
     math.randomseed(os.time())
-    love.window.setMode(2560,1440)
-    debug = true                                                --change flag for debug rendering of Polygons
+   -- love.window.setMode(2560,1440)
+
+    debug = false                                                --change flag for debug rendering of Polygons
+
     love.keyboard.keysPressed = {}
     love.mouse.keysPressed = {}
     love.mouse.keysReleased = {}
+
     timer = 0
     balls = {}     
     legs = {}
@@ -31,32 +34,35 @@ function love.load()
     world = love.physics.newWorld(0,GRAVITY,true)   --world contains all relevant bodies/fixtures in physics simulation
 
     goal = Leg(WINDOW_WIDTH * 2, WINDOW_HEIGHT/2, 200, 500,'static',0,world)
-    
-    
 
     torso = Leg(0, WINDOW_HEIGHT/2, 200, 500,'static',0,world)
 
-
-    thigh = Leg(WINDOW_WIDTH/2,WINDOW_HEIGHT/2,200,50,'static',0,world)
+    thigh = Leg(WINDOW_WIDTH/2 - 220,WINDOW_HEIGHT/2 + 400,200,50,'static',0,world)
     thigh:getBody():setAngle(0 * DEGREES_TO_RADIANS)
     xt, yt = thigh:getBody():getWorldCenter()
+
     calf = Leg(xt + 60,yt + 100,200,50,'dynamic',0,world)
     calf:getBody():setAngle(90 * DEGREES_TO_RADIANS)
+    xc = calf:getX()
+    yc = calf:getY()
+
     knee = love.physics.newRevoluteJoint(thigh:getBody(),calf:getBody(),xt + 75,yt,false)
     knee:setLimitsEnabled(true)
-    knee:setLimits(285* DEGREES_TO_RADIANS, 360* DEGREES_TO_RADIANS)    
-    xc, yc = calf:getBody():getWorldCenter()
-    --foot = Leg(xc,yc, 30, 60, 'dynamic', 0,  world)
-    --ankle = love.physics.newWeldJoint(calf:getBody(), foot:getBody(), xc + 100, yc, false)
+    knee:setLimits(-90 * DEGREES_TO_RADIANS,0)    
+
+    
+    foot = Leg(xc + 100,yc + 100, 60, 30, 'dynamic', 0,  world)
+    ankle = love.physics.newWeldJoint(calf:getBody(), foot:getBody(), xc, yc, false)
     --foot:getBody():setAngle(90 * DEGREES_TO_RADIANS)
+
+
     table.insert(legs, goal)
     table.insert(legs, torso)
     table.insert(legs, thigh)
     table.insert(legs, calf)
-    --table.insert(legs, foot)
+    table.insert(legs, foot)
     table.insert(joints, knee)
     table.insert(joints, ankle)
-
 end
 
 function love.update(dt)
@@ -143,7 +149,10 @@ function love.draw()
         love.graphics.pop()                                         --return draw to original state
     end
     text = love.graphics.newText(love.graphics.getFont(), 'score = ' .. tostring(score))
-    love.graphics.draw(text,100,100)
+    love.graphics.draw(text,100,15)
+
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.print(calf:getBody():getAngle(), 100, 100)
 end
 
 function isBallGrabbed(circle)                                      --detects if mouse position is within a circle object
